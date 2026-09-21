@@ -14,40 +14,88 @@ class DBHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'kronocalc.db');
 
-    return await openDatabase(
+    return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
-        // Tabel Agenda/Kalender
-        await db.execute('''
-          CREATE TABLE agendas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            date TEXT,
-            time TEXT,
-            color INTEGER
-          )
-        ''');
-
-        // Tabel Anggota
-        await db.execute('''
-          CREATE TABLE members (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            birth_date TEXT
-          )
-        ''');
-
-        // Tabel Kegiatan & Pendaftaran Anggota
-        await db.execute('''
-          CREATE TABLE activities (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            date_time TEXT,
-            member_names TEXT
-          )
-        ''');
+        await _createTables(db);
+        await _seedDefaultUser(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await _createUsersTable(db);
+          await _createGroupMembersTable(db);
+          await _seedDefaultUser(db);
+        }
       },
     );
+  }
+
+  static Future<void> _createTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE agendas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        date TEXT NOT NULL,
+        time TEXT NOT NULL,
+        color INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        birth_date TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE activities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        date_time TEXT NOT NULL,
+        member_names TEXT
+      )
+    ''');
+    await _createUsersTable(db);
+    await _createGroupMembersTable(db);
+  }
+
+  static Future<void> _createUsersTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+      )
+    ''');
+  }
+
+  static Future<void> _createGroupMembersTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS group_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        birth_date TEXT NOT NULL
+      )
+    ''');
+  }
+
+  static Future<void> _seedDefaultUser(Database db) async {
+    await db.insert(
+      'users',
+      {'username': 'admin', 'password': '12345'},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  static Future<bool> checkLogin(String username, String password) async {
+    final database = await db;
+    final rows = await database.query(
+      'users',
+      where: 'username = ? AND password = ?',
+      whereArgs: [username.trim(), password],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
   }
 }

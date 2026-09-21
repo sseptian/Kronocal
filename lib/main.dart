@@ -1,35 +1,33 @@
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'widgets/home_shell.dart';
+import 'pages/login_page.dart';
+import 'utils/session_manager.dart';
+import 'utils/db_helper.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await DBHelper.db;
   runApp(const KronoCalcApp());
 }
 
 class KronoCalcApp extends StatefulWidget {
   const KronoCalcApp({super.key});
-
-  /// Mengizinkan widget anak untuk mengakses fungsi toggleTheme secara global
-  static _KronoCalcAppState of(BuildContext context) {
-    return context.findAncestorStateOfType<_KronoCalcAppState>()!;
-  }
-
   @override
   State<KronoCalcApp> createState() => _KronoCalcAppState();
 }
 
 class _KronoCalcAppState extends State<KronoCalcApp> {
   ThemeMode _themeMode = ThemeMode.light;
+  bool _loggedIn = SessionManager.isLoggedIn;
 
-  bool get isDark => _themeMode == ThemeMode.dark;
+  void _toggleTheme() => setState(() {
+        _themeMode =
+            _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      });
 
-  void toggleTheme() {
-    setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
-    });
-  }
+  void _onLoginSuccess() => setState(() => _loggedIn = true);
+  void _onLogout() => setState(() => _loggedIn = false);
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +37,13 @@ class _KronoCalcAppState extends State<KronoCalcApp> {
       themeMode: _themeMode,
       theme: AppTheme.buildTheme(Brightness.light),
       darkTheme: AppTheme.buildTheme(Brightness.dark),
-      home: HomeShell(
-        isDark: isDark,
-        onToggleTheme: toggleTheme,
-      ),
+      home: _loggedIn
+          ? HomeShell(
+              isDark: _themeMode == ThemeMode.dark,
+              onToggleTheme: _toggleTheme,
+              onLogout: _onLogout,
+            )
+          : LoginPage(onLoginSuccess: _onLoginSuccess),
     );
   }
 }
