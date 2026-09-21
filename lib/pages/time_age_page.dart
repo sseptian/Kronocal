@@ -34,7 +34,7 @@ class _TimeAgePageState extends State<TimeAgePage> {
     final hours = (total % 86400) ~/ 3600;
     final minutes = (total % 3600) ~/ 60;
     final seconds = total % 60;
-    return '\$days Hari \$hours Jam \$minutes Menit \$seconds Detik';
+    return '$days Hari $hours Jam $minutes Menit $seconds Detik';
   }
 
   @override
@@ -57,7 +57,7 @@ class _TimeAgePageState extends State<TimeAgePage> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.cake_rounded, color: Color(0xFFE91E63)),
                   title: const Text('Tanggal & Waktu Lahir'),
-                  subtitle: Text('\${_birthDate.day}/\${_birthDate.month}/\${_birthDate.year} \${TimeOfDay.fromDateTime(_birthDate).format(context)}'),
+                  subtitle: Text('${_birthDate.day}/${_birthDate.month}/${_birthDate.year} ${TimeOfDay.fromDateTime(_birthDate).format(context)}'),
                   onTap: _pickBirthDate,
                 ),
                 const Divider(),
