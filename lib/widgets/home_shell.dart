@@ -36,7 +36,11 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget>[const HomePage(), const StopwatchPage(), const HelpPage()];
+    final pages = <Widget>[
+      const HomePage(),
+      const StopwatchPage(),
+      HelpPage(onLogout: _logout),
+    ];
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_index], style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -47,12 +51,6 @@ class _HomeShellState extends State<HomeShell> {
             icon: Icon(widget.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
               color: const Color(0xFFE91E63)),
           ),
-          if (_index == 2)
-            IconButton(
-              tooltip: 'Keluar',
-              onPressed: _logout,
-              icon: const Icon(Icons.logout_rounded, color: Color(0xFFE91E63)),
-            ),
         ],
       ),
       body: IndexedStack(index: _index, children: pages),
