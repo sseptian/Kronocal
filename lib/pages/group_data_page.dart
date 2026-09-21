@@ -63,7 +63,7 @@ class _GroupDataPageState extends State<GroupDataPage> {
   @override Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: cs.surface,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openForm, backgroundColor: const Color(0xFFE91E63), foregroundColor: Colors.white,
         icon: const Icon(Icons.person_add_alt_1_rounded), label: const Text('Tambah')),
