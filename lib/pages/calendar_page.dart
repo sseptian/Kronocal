@@ -4,15 +4,13 @@ import '../utils/db_helper.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
-
-  @override
-  State<CalendarPage> createState() => _CalendarPageState();
+  @override State<CalendarPage> createState() => _CalendarPageState();
 }
 
 class _CalendarPageState extends State<CalendarPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  Map<DateTime, List<Map<String, dynamic>>> _events = {};
+  List<Map<String, dynamic>> _events = [];
 
   @override
   void initState() {
@@ -23,98 +21,121 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Future<void> _loadAgendas() async {
     final db = await DBHelper.db;
-    final List<Map<String, dynamic>> res = await db.query('agendas');
-    Map<DateTime, List<Map<String, dynamic>>> newEvents = {};
-
-    for (var item in res) {
-      DateTime dt = DateTime.parse(item['date']);
-      DateTime key = DateTime(dt.year, dt.month, dt.day);
-      if (newEvents[key] == null) newEvents[key] = [];
-      newEvents[key]!.add(item);
-    }
-
-    setState(() {
-      _events = newEvents;
-    });
+    final rows = await db.query('agendas', orderBy: 'date ASC, time ASC');
+    if (mounted) setState(() => _events = rows);
   }
 
-  void _addAgendaDialog() {
-    final titleCtrl = TextEditingController();
-    TimeOfDay selectedTime = TimeOfDay.now();
-    Color selectedColor = Colors.pink;
+  List<Map<String, dynamic>> get _dayEvents {
+    final d = _selectedDay!;
+    return _events.where((e) {
+      final dt = DateTime.parse(e['date'] as String);
+      return dt.year == d.year && dt.month == d.month && dt.day == d.day;
+    }).toList();
+  }
 
-    showDialog(
+  Future<void> _openAgendaForm({Map<String, dynamic>? item}) async {
+    final titleCtrl = TextEditingController(text: item?['title']?.toString() ?? '');
+    TimeOfDay selectedTime = TimeOfDay.now();
+    if (item != null) {
+      final raw = item['time']?.toString() ?? '';
+      final match = RegExp(r'^(\d{1,2}):(\d{2})').firstMatch(raw);
+      if (match != null) {
+        selectedTime = TimeOfDay(hour: int.parse(match.group(1)!), minute: int.parse(match.group(2)!));
+      }
+    }
+    Color selectedColor = item?['color'] is int ? Color(item!['color'] as int) : Colors.pink;
+
+    await showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder( // Ganti StatefulWidget menjadi StatefulBuilder
-  builder: (context, setDlgState) => AlertDialog(
-    title: const Text('Tambah Agenda / Tanggal Penting'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextField(
-          controller: titleCtrl, 
-          decoration: const InputDecoration(labelText: 'Judul Agenda'),
-        ),
-        const SizedBox(height: 12),
-        ListTile(
-          title: Text('Waktu: ${selectedTime.format(context)}'),
-          trailing: const Icon(Icons.access_time),
-          onTap: () async {
-            final t = await showTimePicker(context: context, initialTime: selectedTime);
-            if (t != null) setDlgState(() => selectedTime = t);
-          },
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [Colors.pink, Colors.purple, Colors.orange, Colors.blue].map((c) {
-            return GestureDetector(
-              onTap: () => setDlgState(() => selectedColor = c),
-              child: CircleAvatar(
-                backgroundColor: c,
-                child: selectedColor == c ? const Icon(Icons.check, color: Colors.white) : null,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: Text(item == null ? 'Tambah Agenda' : 'Edit Agenda'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Judul Agenda')),
+              const SizedBox(height: 12),
+              ListTile(
+                title: Text('Waktu: \${selectedTime.format(ctx)}'),
+                trailing: const Icon(Icons.access_time),
+                onTap: () async {
+                  final t = await showTimePicker(context: ctx, initialTime: selectedTime);
+                  if (t != null) setDlgState(() => selectedTime = t);
+                },
               ),
-            );
-          }).toList(),
-        )
-      ],
-    ),
-    actions: [
-      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-      FilledButton(
-        onPressed: () async {
-          if (titleCtrl.text.isNotEmpty && _selectedDay != null) {
-            final db = await DBHelper.db;
-            await db.insert('agendas', {
-              'title': titleCtrl.text,
-              'date': _selectedDay!.toIso8601String(),
-              'time': selectedTime.format(context),
-              'color': selectedColor.toARGB32(), // Ganti selectedColor.value dengan toARGB32()
-            });
-            if (!mounted) return;
-            Navigator.pop(ctx);
-            _loadAgendas();
-          }
-        },
-        child: const Text('Simpan'),
-      )
-    ],
-  ),
-),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [Colors.pink, Colors.purple, Colors.orange, Colors.blue].map((c) =>
+                  GestureDetector(
+                    onTap: () => setDlgState(() => selectedColor = c),
+                    child: CircleAvatar(
+                      backgroundColor: c,
+                      child: selectedColor.value == c.value ? const Icon(Icons.check, color: Colors.white) : null,
+                    ),
+                  )).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+            FilledButton(
+              onPressed: () async {
+                if (titleCtrl.text.trim().isEmpty) return;
+                final db = await DBHelper.db;
+                final data = {
+                  'title': titleCtrl.text.trim(),
+                  'date': _selectedDay!.toIso8601String(),
+                  'time': selectedTime.format(ctx),
+                  'color': selectedColor.value,
+                };
+                if (item == null) {
+                  await db.insert('agendas', data);
+                } else {
+                  await db.update('agendas', data, where: 'id = ?', whereArgs: [item['id']]);
+                }
+                if (!mounted) return;
+                Navigator.pop(ctx);
+                await _loadAgendas();
+              },
+              child: Text(item == null ? 'Simpan' : 'Update'),
+            ),
+          ],
+        ),
+      ),
     );
+    titleCtrl.dispose();
+  }
+
+  Future<void> _confirmDelete(int id) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Agenda?'),
+        content: const Text('Agenda yang dihapus tidak dapat dikembalikan.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Hapus')),
+        ],
+      ),
+    );
+    if (ok == true) {
+      final db = await DBHelper.db;
+      await db.delete('agendas', where: 'id = ?', whereArgs: [id]);
+      await _loadAgendas();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    DateTime selectedKey = DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
-    List<Map<String, dynamic>> dayEvents = _events[selectedKey] ?? [];
-
+    final dayEvents = _dayEvents;
     return Scaffold(
-      appBar: AppBar(title: const Text('Kalender Agenda & Catatan')),
+      backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFE91E63),
-        onPressed: _addAgendaDialog,
-        child: const Icon(Icons.add, color: Colors.white),
+        foregroundColor: Colors.white,
+        onPressed: () => _openAgendaForm(),
+        child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
@@ -123,49 +144,44 @@ class _CalendarPageState extends State<CalendarPage> {
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: (sDay, fDay) {
-              setState(() {
-                _selectedDay = sDay;
-                _focusedDay = fDay;
-              });
-            },
-            calendarBuilders: CalendarBuilders(
-              markerBuilder: (context, date, events) {
-                DateTime k = DateTime(date.year, date.month, date.day);
-                if (_events[k] != null && _events[k]!.isNotEmpty) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: _events[k]!.map((e) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: Color(e['color'])),
-                      );
-                    }).toList(),
-                  );
-                }
-                return null;
-              },
-            ),
+            onDaySelected: (selected, focused) => setState(() {
+              _selectedDay = selected;
+              _focusedDay = focused;
+            }),
+            eventLoader: (day) => _events.where((e) {
+              final dt = DateTime.parse(e['date'] as String);
+              return dt.year == day.year && dt.month == day.month && dt.day == day.day;
+            }).toList(),
           ),
           const Divider(),
           Expanded(
-            child: ListView.builder(
-              itemCount: dayEvents.length,
-              itemBuilder: (ctx, i) {
-                final item = dayEvents[i];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: ListTile(
-                    leading: CircleAvatar(backgroundColor: Color(item['color'])),
-                    title: Text(item['title']),
-                    subtitle: Text('Waktu: ${item['time']}'),
+            child: dayEvents.isEmpty
+                ? const Center(child: Text('Belum ada agenda pada tanggal ini'))
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+                    itemCount: dayEvents.length,
+                    itemBuilder: (ctx, i) {
+                      final item = dayEvents[i];
+                      return Card(
+                        child: ListTile(
+                          leading: CircleAvatar(backgroundColor: Color(item['color'] as int)),
+                          title: Text(item['title'].toString()),
+                          subtitle: Text('Waktu: \${item['time']}'),
+                          trailing: PopupMenuButton<String>(
+                            onSelected: (v) {
+                              if (v == 'edit') _openAgendaForm(item: item);
+                              if (v == 'delete') _confirmDelete(item['id'] as int);
+                            },
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(value: 'edit', child: Text('Edit')),
+                              PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          )
+          ),
         ],
       ),
     );

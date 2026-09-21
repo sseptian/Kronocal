@@ -16,7 +16,7 @@ class DBHelper {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await _createTables(db);
         await _seedDefaultUser(db);
@@ -26,6 +26,8 @@ class DBHelper {
           await _createUsersTable(db);
           await _createGroupMembersTable(db);
           await _seedDefaultUser(db);
+        } else if (oldVersion < 3) {
+          await db.execute("ALTER TABLE group_members ADD COLUMN nim TEXT NOT NULL DEFAULT ''");
         }
       },
     );
@@ -75,27 +77,21 @@ class DBHelper {
       CREATE TABLE IF NOT EXISTS group_members (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        birth_date TEXT NOT NULL
+        birth_date TEXT,
+        nim TEXT NOT NULL DEFAULT ''
       )
     ''');
   }
 
   static Future<void> _seedDefaultUser(Database db) async {
-    await db.insert(
-      'users',
-      {'username': 'admin', 'password': '12345'},
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('users', {'username': 'admin', 'password': '12345'},
+      conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   static Future<bool> checkLogin(String username, String password) async {
     final database = await db;
-    final rows = await database.query(
-      'users',
-      where: 'username = ? AND password = ?',
-      whereArgs: [username.trim(), password],
-      limit: 1,
-    );
+    final rows = await database.query('users',
+      where: 'username = ? AND password = ?', whereArgs: [username.trim(), password], limit: 1);
     return rows.isNotEmpty;
   }
 }

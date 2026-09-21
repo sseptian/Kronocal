@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import '../pages/calculator_page.dart';
-import '../pages/calendar_page.dart';
-import '../pages/date_conversion_page.dart';
-import '../pages/group_data_page.dart';
+import '../pages/home_page.dart';
 import '../pages/stopwatch_page.dart';
 import '../pages/help_page.dart';
 import '../utils/session_manager.dart';
@@ -14,16 +11,17 @@ class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.isDark, required this.onToggleTheme, required this.onLogout});
   @override State<HomeShell> createState() => _HomeShellState();
 }
+
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
-  static const _titles = ['Kalkulator','Kalender & Agenda','Penanggalan','Stopwatch','Data Kelompok'];
+  static const _titles = ['Home', 'Stopwatch', 'Bantuan'];
 
   Future<void> _logout() async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Keluar dari Aplikasi?'),
-        content: Text('Sesi ' + SessionManager.username + ' akan diakhiri.'),
+        content: Text('Sesi \${SessionManager.username} akan diakhiri.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Ya, Keluar')),
@@ -39,11 +37,9 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
-      const CalculatorPage(),
-      const CalendarPage(),
-      const DateConversionPage(),
+      const HomePage(),
       const StopwatchPage(),
-      const GroupDataPage(),
+      HelpPage(onLogout: _logout),
     ];
     return Scaffold(
       appBar: AppBar(
@@ -53,22 +49,7 @@ class _HomeShellState extends State<HomeShell> {
             tooltip: widget.isDark ? 'Mode Terang' : 'Mode Gelap',
             onPressed: widget.onToggleTheme,
             icon: Icon(widget.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                color: const Color(0xFFE91E63)),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'help') Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpPage()));
-              if (value == 'logout') _logout();
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(enabled: false, child: Text(SessionManager.username,
-                  style: const TextStyle(fontWeight: FontWeight.bold))),
-              const PopupMenuDivider(),
-              const PopupMenuItem(value: 'help', child: ListTile(
-                leading: Icon(Icons.help_outline_rounded), title: Text('Bantuan'))),
-              const PopupMenuItem(value: 'logout', child: ListTile(
-                leading: Icon(Icons.logout_rounded), title: Text('Keluar'))),
-            ],
+              color: const Color(0xFFE91E63)),
           ),
         ],
       ),
@@ -77,11 +58,9 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.calculate_outlined), selectedIcon: Icon(Icons.calculate_rounded, color: Color(0xFF7B1FA2)), label: 'Kalkulator'),
-          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month_rounded, color: Color(0xFF7B1FA2)), label: 'Kalender'),
-          NavigationDestination(icon: Icon(Icons.event_available_outlined), selectedIcon: Icon(Icons.event_available_rounded, color: Color(0xFF7B1FA2)), label: 'Penanggalan'),
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded, color: Color(0xFF7B1FA2)), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.timer_outlined), selectedIcon: Icon(Icons.timer_rounded, color: Color(0xFF7B1FA2)), label: 'Stopwatch'),
-          NavigationDestination(icon: Icon(Icons.groups_outlined), selectedIcon: Icon(Icons.groups_rounded, color: Color(0xFF7B1FA2)), label: 'Kelompok'),
+          NavigationDestination(icon: Icon(Icons.help_outline_rounded), selectedIcon: Icon(Icons.help_rounded, color: Color(0xFF7B1FA2)), label: 'Bantuan'),
         ],
       ),
     );
