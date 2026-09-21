@@ -16,7 +16,7 @@ class DBHelper {
 
     return openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await _createTables(db);
         await _seedDefaultUser(db);
@@ -26,8 +26,12 @@ class DBHelper {
           await _createUsersTable(db);
           await _createGroupMembersTable(db);
           await _seedDefaultUser(db);
-        } else if (oldVersion < 3) {
+        }
+        if (oldVersion < 3) {
           await db.execute("ALTER TABLE group_members ADD COLUMN nim TEXT NOT NULL DEFAULT ''");
+        }
+        if (oldVersion < 4) {
+          await _rebuildGroupMembersTable(db);
         }
       },
     );
@@ -77,10 +81,26 @@ class DBHelper {
       CREATE TABLE IF NOT EXISTS group_members (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        birth_date TEXT,
-        nim TEXT NOT NULL DEFAULT ''
+        nim TEXT NOT NULL
       )
     ''');
+  }
+
+  static Future<void> _rebuildGroupMembersTable(Database db) async {
+    await db.execute('ALTER TABLE group_members RENAME TO group_members_old');
+    await db.execute('''
+      CREATE TABLE group_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        nim TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      INSERT INTO group_members (id, name, nim)
+      SELECT id, name, COALESCE(nim, '')
+      FROM group_members_old
+    ''');
+    await db.execute('DROP TABLE group_members_old');
   }
 
   static Future<void> _seedDefaultUser(Database db) async {
