@@ -34,7 +34,7 @@ class _DateTimeCalculatorPageState extends State<DateTimeCalculatorPage> {
     final a = DateTime(_startDate.year, _startDate.month, _startDate.day);
     final b = DateTime(_endDate.year, _endDate.month, _endDate.day);
     final diff = b.difference(a).inDays.abs();
-    return '\$diff Hari = \${diff ~/ 7} Minggu \${diff % 7} Hari';
+    return '$diff Hari = ${diff ~/ 7} Minggu ${diff % 7} Hari';
   }
 
   String _timeDifference() {
@@ -42,7 +42,7 @@ class _DateTimeCalculatorPageState extends State<DateTimeCalculatorPage> {
     var b = DateTime(2000, 1, 1, _endTime.hour, _endTime.minute);
     if (b.isBefore(a)) b = b.add(const Duration(days: 1));
     final diff = b.difference(a);
-    return '\${diff.inHours} Jam \${diff.inMinutes.remainder(60)} Menit';
+    return '${diff.inHours} Jam ${diff.inMinutes.remainder(60)} Menit';
   }
 
   @override
