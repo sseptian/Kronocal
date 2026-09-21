@@ -129,15 +129,17 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     final dayEvents = _dayEvents;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFE91E63),
-        foregroundColor: Colors.white,
-        onPressed: () => _openAgendaForm(),
-        child: const Icon(Icons.add),
-      ),
-      body: Column(
+    return Container(
+      color: cs.surface,
+      child: Stack(
+        children: [
+          Column(
+      )
+          ]
+        ),
+      );
+  }
+}
         children: [
           TableCalendar(
             firstDay: DateTime.utc(2020, 1, 1),
