@@ -154,6 +154,40 @@ class _CalendarPageState extends State<CalendarPage> {
               final dt = DateTime.parse(e['date'] as String);
               return dt.year == day.year && dt.month == day.month && dt.day == day.day;
             }).toList(),
+            calendarStyle: CalendarStyle(
+              outsideDaysVisible: false,
+              defaultTextStyle: TextStyle(color: cs.onSurface),
+              weekendTextStyle: TextStyle(color: cs.secondary),
+              todayDecoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+              ),
+              todayTextStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.bold),
+              selectedDecoration: BoxDecoration(
+                color: cs.primary,
+                shape: BoxShape.circle,
+              ),
+              selectedTextStyle: TextStyle(color: cs.onPrimary, fontWeight: FontWeight.bold),
+              markerDecoration: BoxDecoration(
+                color: cs.secondary,
+                shape: BoxShape.circle,
+              ),
+            ),
+            headerStyle: HeaderStyle(
+              titleCentered: true,
+              formatButtonVisible: false,
+              titleTextStyle: TextStyle(
+                color: cs.onSurface,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+              leftChevronIcon: Icon(Icons.chevron_left, color: cs.onSurface),
+              rightChevronIcon: Icon(Icons.chevron_right, color: cs.onSurface),
+            ),
+            daysOfWeekStyle: DaysOfWeekStyle(
+              weekdayStyle: TextStyle(color: cs.onSurfaceVariant),
+              weekendStyle: TextStyle(color: cs.secondary),
+            ),
           ),
           const Divider(),
           Expanded(
