@@ -80,7 +80,7 @@ class _GroupDataPageState extends State<GroupDataPage> {
                   child: ListTile(
                     leading: CircleAvatar(child: Text(name.isEmpty ? '?' : name.substring(0, 1).toUpperCase())),
                     title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('NIM: \${(p['nim'] ?? '').toString()}'),
+                    subtitle: Text('NIM: ${(p['nim'] ?? '').toString()}'),
                     trailing: IconButton(
                       onPressed: () => _removePerson(p['id'] as int),
                       icon: Icon(Icons.delete_outline_rounded, color: cs.error),
