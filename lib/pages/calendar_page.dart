@@ -56,7 +56,7 @@ class _CalendarPageState extends State<CalendarPage> {
               TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Judul Agenda')),
               const SizedBox(height: 12),
               ListTile(
-                title: Text('Waktu: \${selectedTime.format(ctx)}'),
+                title: Text('Waktu: ${selectedTime.format(ctx)}'),
                 trailing: const Icon(Icons.access_time),
                 onTap: () async {
                   final t = await showTimePicker(context: ctx, initialTime: selectedTime);
@@ -71,7 +71,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     onTap: () => setDlgState(() => selectedColor = c),
                     child: CircleAvatar(
                       backgroundColor: c,
-                      child: selectedColor.value == c.value ? const Icon(Icons.check, color: Colors.white) : null,
+                      child: selectedColor.toARGB32() == c.toARGB32() ? const Icon(Icons.check, color: Colors.white) : null,
                     ),
                   )).toList(),
               ),
@@ -166,7 +166,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         child: ListTile(
                           leading: CircleAvatar(backgroundColor: Color(item['color'] as int)),
                           title: Text(item['title'].toString()),
-                          subtitle: Text('Waktu: \${item['time']}'),
+                          subtitle: Text('Waktu: ${item['time']}'),
                           trailing: PopupMenuButton<String>(
                             onSelected: (v) {
                               if (v == 'edit') _openAgendaForm(item: item);
