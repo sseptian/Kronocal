@@ -22,7 +22,7 @@ class HelpPage extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('\${i + 1}.', style: const TextStyle(color: Color(0xFF7B1FA2), fontWeight: FontWeight.bold)),
+                  Text('${i + 1}.', style: const TextStyle(color: Color(0xFF7B1FA2), fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
                   Expanded(child: Text(steps[i])),
                 ],
@@ -48,7 +48,7 @@ class HelpPage extends StatelessWidget {
               child: Icon(Icons.person, color: Colors.white),
             ),
             title: Text(SessionManager.username, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(loginTime == null ? 'Sesi tidak aktif' : 'Masuk sejak \${DateConverter.masehi(loginTime)}'),
+            subtitle: Text(loginTime == null ? 'Sesi tidak aktif' : 'Masuk sejak ${DateConverter.masehi(loginTime)}'),
           ),
         ),
         const SizedBox(height: 16),
