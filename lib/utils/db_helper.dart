@@ -26,8 +26,7 @@ class DBHelper {
           await _createUsersTable(db);
           await _createGroupMembersTable(db);
           await _seedDefaultUser(db);
-        }
-        if (oldVersion < 3) {
+        } else if (oldVersion < 3) {
           await db.execute("ALTER TABLE group_members ADD COLUMN nim TEXT NOT NULL DEFAULT ''");
         }
       },
