@@ -6,7 +6,7 @@ class DateConverter {
   static const List<String> shio = ['Tikus','Kerbau','Macan','Kelinci','Naga','Ular','Kuda','Kambing','Monyet','Ayam','Anjing','Babi'];
   static const List<String> elemen = ['Kayu','Api','Tanah','Logam','Air'];
 
-  static String masehi(DateTime d) => '\${hariMasehi[d.weekday - 1]}, \${d.day} \${bulanMasehi[d.month - 1]} \${d.year}';
+  static String masehi(DateTime d) => '${hariMasehi[d.weekday - 1]}, ${d.day} ${bulanMasehi[d.month - 1]} ${d.year}';
 
   static List<int> _gregorianToHijri(int year, int month, int day) {
     int jd;
@@ -31,7 +31,7 @@ class DateConverter {
 
   static String hijriah(DateTime d) {
     final h = _gregorianToHijri(d.year, d.month, d.day);
-    return '\${h[2]} \${bulanHijriah[(h[1] - 1).clamp(0, 11)]} \${h[0]} H';
+    return '${h[2]} ${bulanHijriah[(h[1] - 1).clamp(0, 11)]} ${h[0]} H';
   }
 
   static int _daysFromEpoch(DateTime d) {
@@ -42,14 +42,14 @@ class DateConverter {
 
   static String wetonJawa(DateTime d) {
     final idx = (((_daysFromEpoch(d) + 3) % 5) + 5) % 5;
-    return '\${hariMasehi[d.weekday - 1]} \${pasaran[idx]}';
+    return '${hariMasehi[d.weekday - 1]} ${pasaran[idx]}';
   }
 
   static String shioCina(DateTime d) {
     final y = d.year;
     final animal = shio[((y - 4) % 12 + 12) % 12];
     final el = elemen[(((y - 4) % 10 + 10) % 10) ~/ 2];
-    return '\$animal (\$el)';
+    return '$animal ($el)';
   }
 
   static DateTime _addMonths(DateTime d, int months) {
@@ -85,13 +85,13 @@ class DateConverter {
     final hours = remaining.inHours.remainder(24);
     final minutes = remaining.inMinutes.remainder(60);
     final seconds = remaining.inSeconds.remainder(60);
-    return '\$years Tahun \$months Bulan \$days Hari \$hours Jam \$minutes Menit \$seconds Detik';
+    return '$years Tahun $months Bulan $days Hari $hours Jam $minutes Menit $seconds Detik';
   }
 
   static String sakaBali(DateTime d) {
     var tahunSaka = d.year - 78;
     if (d.month < 3 || (d.month == 3 && d.day < 15)) tahunSaka -= 1;
-    return '\$tahunSaka Saka';
+    return '$tahunSaka Saka';
   }
 
   static Map<String, String> all(DateTime d) => {
